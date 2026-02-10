@@ -1,1 +1,3 @@
-mkdir model
+git add model/model.pkl
+git commit -m "Add trained ML model (1000 samples)"
+git push
