@@ -30,12 +30,23 @@ if st.button("Analyze Incident"):
     else:
         label, confidence = classify(text)
 
-        st.subheader(f"Result: {label}")
+        # --- Uncertain case handling ---
+        if confidence < 0.55:
+            st.warning("⚠️ This case is unclear.")
+            st.write(
+                "If this experience felt uncomfortable or unsafe, "
+                "your feelings are valid and support is available."
+            )
+        else:
+            st.subheader(f"Result: {label}")
+
+        # Confidence display
         st.progress(confidence)
+        st.caption(f"Confidence: {int(confidence * 100)}%")
 
         info = get_guidance(label)
 
-        if "law" in info:
+        if "law" in info and confidence >= 0.55:
             st.error("⚠️ Serious Case Detected")
             st.markdown(f"**Relevant Laws (India):** {info['law']}")
 
@@ -48,3 +59,4 @@ if st.button("Analyze Incident"):
                 st.markdown(f"- {c}")
         else:
             st.success(info["message"])
+
