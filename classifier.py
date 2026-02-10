@@ -1,5 +1,5 @@
-import pickle
 import os
+import pickle
 from rules import rule_score
 
 LABELS = {
@@ -18,33 +18,33 @@ MODEL_PATH = "model/model.pkl"
 model = None
 vectorizer = None
 
-# Try loading ML model safely
+# Safe loading (NO crash)
 if os.path.exists(MODEL_PATH):
     with open(MODEL_PATH, "rb") as f:
         model, vectorizer = pickle.load(f)
 
 def classify(text: str):
     text = text.strip()
-    rule_intent = rule_score(text)
+    intent_score = rule_score(text)
 
-    # --- ML path ---
+    # ML prediction (only if model exists)
     if model and vectorizer:
         vec = vectorizer.transform([text])
         probs = model.predict_proba(vec)[0]
         ml_label = LABELS[probs.argmax()]
-        ml_conf = probs.max()
+        ml_conf = float(probs.max())
     else:
         ml_label = "non-harassment"
-        ml_conf = 0.4  # conservative default
+        ml_conf = 0.4  # safe fallback
 
-    # --- Hybrid decision ---
-    if rule_intent >= 6:
-        final = ml_label if ml_label != "non-harassment" else "serious harassment"
-    elif rule_intent >= 3:
-        final = ml_label
+    # Hybrid decision logic
+    if intent_score >= 6:
+        final_label = ml_label if ml_label != "non-harassment" else "serious harassment"
+    elif intent_score >= 3:
+        final_label = ml_label
     else:
-        final = "non-harassment"
+        final_label = "non-harassment"
 
-    confidence = min(1.0, ml_conf + rule_intent * 0.08)
+    confidence = min(1.0, ml_conf + intent_score * 0.08)
 
-    return final, round(confidence, 2)
+    return final_label, round(confidence, 2)
